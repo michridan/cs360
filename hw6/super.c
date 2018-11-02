@@ -1,6 +1,8 @@
 /********* super.c code ***************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <ext2fs/ext2_fs.h>
 
@@ -84,8 +86,8 @@ int super()
 
   printf("s_magic = %x\n", sp->s_magic);
 
-  printf("s_mtime = %s", ctime(&sp->s_mtime));
-  printf("s_wtime = %s", ctime(&sp->s_wtime));
+  printf("s_mtime = %s", ctime((time_t *)&sp->s_mtime));
+  printf("s_wtime = %s", ctime((time_t *)&sp->s_wtime));
 }
 
 char *disk = "mydisk";
