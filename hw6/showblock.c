@@ -95,8 +95,22 @@ int showblock(char *base, char *path)
 			return 0;
 
 		printf("%d, ", ip->i_block[i]);
-		//continue
 	}
+	putchar('\n');
+
+	printf("Indirect Block Number:\n");
+	if(ip->i_block[12] == 0)
+		return 0;
+
+	printf("%d\n", ip->i_block[12]);
+
+	printf("Double Indirect Block Number:\n");
+	if(ip->i_block[13] == 0)
+		return 0;
+
+	printf("%d\n", ip->i_block[13]);
+	
+	return 0;
 }
 
 char *disk = "mydisk";
