@@ -27,8 +27,10 @@ MINODE *iget();
 
 /******* WRITE YOUR OWN util.c and others ***********
 #include "util.c"
-#include "cd_ls_pwd.c"
 ***************************************************/
+
+#include "cd_ls_pwd.c"
+
 int init()
 {
   int i;
@@ -61,18 +63,42 @@ int mount_root()
 
   printf("mount_root()\n");
 
-  (1). read super block in block #1;
-       verify it is an EXT2 FS;
-       record nblocks, ninodes as globals;
+  //(1). read super block in block #1;
+       //verify it is an EXT2 FS;
+       //record nblocks, ninodes as globals;
 
-  (2). get GD0 in Block #2:
-       record bmap, imap, inodes_start as globals
+	get_block(dev, 1, buf);  
+	sp = (SUPER *)buf;
 
-  (3). root = iget(dev, 2);       // get #2 INODE into minoe[ ]
-       printf("mounted root OK\n");
+	// check for EXT2 magic number:
+
+	printf("checking if EXT2... ", sp->s_magic);
+	if (sp->s_magic != 0xEF53)
+	{
+		printf("NOT an EXT2 FS\n");
+		exit(1);
+	}
+	printf("EXT2 FS OK\n");
+
+	nblocks = sp->blocks_count;
+	ninodes = sp->inodes_count;
+
+  //(2). get GD0 in Block #2:
+       //record bmap, imap, inodes_start as globals
+	get_block(dev, 2, buf);
+	gp = (GD *)buf;
+
+	bmap = gd->bg_block_bitmap;
+	imap = gd->bg_inode_bitmap;
+	inodes_start = gd->bg_inode_table;
+
+  //(3). 
+	root = iget(dev, 2);       // get #2 INODE into minoe[ ]
+    printf("mounted root OK\n");
 }
 
 char *disk = "mydisk";
+
 int main(int argc, char *argv[ ])
 {
   int ino;
@@ -90,12 +116,12 @@ int main(int argc, char *argv[ ])
   init();  
   mount_root();
   printf("root refCount = %d\n", root->refCount);
-
   printf("creating P0 as running process\n");
   running = &proc[0];
   running->status = READY;
   running->cwd = iget(dev, 2);
   // set proc[1]'s cwd to root also
+  proc[1]->cwd = root;
   printf("root refCount = %d\n", root->refCount);
 
   while(1){
@@ -112,14 +138,14 @@ int main(int argc, char *argv[ ])
 
     if (strcmp(cmd, "ls")==0)
        ls(pathname);
-
-    if (strcmp(cmd, "cd")==0)
+	else if (strcmp(cmd, "cd")==0)
        chdir(pathname);
-
-    if (strcmp(cmd, "pwd")==0)
+	else if (strcmp(cmd, "pwd")==0)
+	{
        pwd(running->cwd);
-
-    if (strcmp(cmd, "quit")==0)
+	   putchar('\n');
+	}
+	else if (strcmp(cmd, "quit")==0)
        quit();
   }
 }
@@ -156,7 +182,8 @@ int quit()
 {
   int i;
   MINODE *mip;
-  for (i=0; i<NMINODE; i++){
+  for (i=0; i<NMINODE; i++)
+  {
     mip = &minode[i];
     if (mip->refCount > 0)
       iput(mip);
