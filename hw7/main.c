@@ -88,9 +88,9 @@ int mount_root()
 	get_block(dev, 2, buf);
 	gp = (GD *)buf;
 
-	bmap = gd->bg_block_bitmap;
-	imap = gd->bg_inode_bitmap;
-	inodes_start = gd->bg_inode_table;
+	bmap = gp->bg_block_bitmap;
+	imap = gp->bg_inode_bitmap;
+	inodes_start = gp->bg_inode_table;
 
   //(3). 
 	root = iget(dev, 2);       // get #2 INODE into minoe[ ]
@@ -121,7 +121,7 @@ int main(int argc, char *argv[ ])
   running->status = READY;
   running->cwd = iget(dev, 2);
   // set proc[1]'s cwd to root also
-  proc[1]->cwd = root;
+  proc[1].cwd = root;
   printf("root refCount = %d\n", root->refCount);
 
   while(1){
