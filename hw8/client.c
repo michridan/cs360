@@ -68,7 +68,7 @@ int client_init(char *argv[])
 int main(int argc, char *argv[ ])
 {
   int n;
-  char line[MAX], ans[MAX];
+  char line[MAX], temp[MAX], cmd[64], fullpath[MAX];
 
   if (argc < 3){
      printf("Usage : client ServerName SeverPort\n");
@@ -79,13 +79,18 @@ int main(int argc, char *argv[ ])
   // sock <---> server
   printf("********  processing loop  *********\n");
   while (1){
-    printf("input a line : ");
+    printf("Input command: ");
     bzero(line, MAX);                // zero out line[ ]
     fgets(line, MAX, stdin);         // get a line (end with \n) from stdin
 
     line[strlen(line)-1] = 0;        // kill \n at end
     if (line[0]==0)                  // exit if NULL line
        exit(0);
+
+	strcpy(temp, line);
+	sscanf("%s %s", cmd, fullpath);
+
+	//TODO: Process command
 
     // Send ENTIRE line to server
     n = write(server_sock, line, MAX);
