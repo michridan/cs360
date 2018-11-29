@@ -1,27 +1,6 @@
 /******** cd_ls_pwd.c ***********/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <ext2fs/ext2_fs.h>
-#include <string.h>
-#include <libgen.h>
-#include <sys/stat.h>
-
-#include "type.h"
-//#include "util.c"
-
-/**** globals defined in main.c file ****/
-
-extern MINODE minode[NMINODE];
-extern MINODE *root;
-extern PROC   proc[NPROC], *running;
-extern char gpath[128];
-extern char *name[64];
-extern int n;
-extern int fd, dev;
-extern int nblocks, ninodes, bmap, imap, inode_start;
-extern char line[256], cmd[32], pathname[256];
+#include "cd_ls_pwd.h"
 
 int ls_file(int ino)
 {
@@ -32,11 +11,11 @@ int ls_file(int ino)
 	int i;
 
 	// print mode
-	if ((stat.i_mode & 0xF000) == 0x8000) // if (S_ISREG())
+	if (S_ISREG(stat.i_mode))
 		putchar('-');
-	else if ((stat.i_mode & 0xF000) == 0x4000) // if (S_ISDIR())
+	else if (S_ISDIR(stat.i_mode))
 		putchar('d');
-	else if ((stat.i_mode & 0xF000) == 0xA000) // if (S_ISLNK())
+	else if (S_ISLNK(stat.i_mode))
 		putchar('l');
 
 	for (i=8; i >= 0; i--)	
@@ -53,31 +32,42 @@ int ls_file(int ino)
 	printf("%4d ", stat.i_gid);
 	printf("%8d ", stat.i_size);
 
-	// print time
-	strcpy(ftime, ctime(&stat.i_ctime));
-	ftime[strlen(ftime)-1] = 0;
-	printf("%s  ",ftime);
+	// can't figure out how to print the time
+	//strcpy(ftime, ctime(&stat.i_atime));
+	//ftime[strlen(ftime)-1] = 0;
+	//printf("%s  ",ftime);
 
-	// print name at the DIR level
+	// print name at the upper level
+	return 0;
 }
 
 int ls_dir(char *dirname)
 {
-	char *buf;
-    int ino = getino(dirname);
-    MINODE mip = iget(dev, ino);
+	char buf[BLKSIZE];
+    int ino;
+    MINODE *mip;
 	int i;
-	char temp[256];
+	char temp[256], *cp;
+
+	if(!strcmp(dirname, ""))
+	{
+		mip = running->cwd;
+	}
+	else
+	{
+		ino = getino1(dirname);
+		mip = iget(dev, ino);
+	}
 
 	for (i=0; i < 12; i++)
 	{ 
 		if (mip->INODE.i_block[i] == 0)
 			break;
-		get_block(dev, mip->INODE.i_block[i], dbuf);
-	    dp = (DIR *)dbuf;
-		cp = dbuf;
+		get_block(dev, mip->INODE.i_block[i], buf);
+	    dp = (DIR *)buf;
+		cp = buf;
 
-	    while (cp < dbuf + BLKSIZE)
+	    while (cp < buf + BLKSIZE)
 		{
 		   strncpy(temp, dp->name, dp->name_len);
 	       temp[dp->name_len] = 0;
@@ -92,20 +82,46 @@ int ls_dir(char *dirname)
 	return 0;
 }
 
-int ls(char *pathname)
+int ls(char *name)
 {
-    int ino = getino(dirname);
-    MINODE mip = iget(dev, ino);
-	// Check if reg or dir, use correct ls
+    int ino;
+    MINODE *mip;
+	INODE check;
 
+	if(!strcmp(name, ""))
+	{
+		mip = running->cwd;
+		check = mip->INODE;
+	}
+	else
+	{
+		ino = getino1(name);
+		mip = iget(dev, ino);
+		check = mip->INODE;
+	}
+	// Check if reg or dir, use correct ls
+	if (S_ISDIR(check.i_mode))
+	{
+		ls_dir(name);
+	}
+	else
+	{
+		ls_file(ino);
+		// Print name
+		printf("%s\n", basename(name));
+	}
+
+	return 1;
 }
 
 int chdir(char *pathname)
 {
+	if(!strcmp(pathname, ""))
+	{
+		running->cwd = root;
+		return 1;
+	}
 	/*
-    if (no pathname)
-        cd to root;
-    else
 		cd to pathname by
     (1).  ino = getino(pathname);
     (2).  mip = iget(dev, ino);
@@ -113,18 +129,40 @@ int chdir(char *pathname)
     (4).  iput(running->cwd);
 	(5).  running->cwd = mip;
 	*/
-}
+	int ino = getino1(pathname);
+	MINODE *mip = iget(dev, ino);
 
-int pwd(MINODE *wd)
-{
-	if (wd == root)
-		printf("/");
-    else
-         rpwd(wd);
+	if(S_ISDIR(mip->INODE.i_mode))
+	{
+		iput(running->cwd);
+		running->cwd = mip;
+		return 1;
+	}
+	else
+		printf("%s is not a directory!\n", pathname);
+
+	return 0;
 }
 
 int rpwd(MINODE *wd)
 {
+	if(wd == root)
+	{
+		printf("/");
+		return 0;
+	}
+
+	int pino = search(wd, "..");
+	MINODE *pip = iget(dev, pino);
+	char myname[64];
+
+	findmyname(pip, wd->ino, myname);
+
+	rpwd(pip);
+
+	printf("%s/", myname);
+
+	return 0;
 	/*
 	if (wd==root) return;
     //from i_block[0] of wd->INODE: get my_ino of . parent_ino of ..
@@ -135,4 +173,14 @@ int rpwd(MINODE *wd)
 
     printf("/%s", my_name);
 	*/
+}
+
+int pwd(MINODE *wd)
+{
+	if (wd == root)
+		printf("/");
+    else
+         rpwd(wd);
+	putchar('\n');
+	return 1;
 }

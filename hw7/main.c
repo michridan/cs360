@@ -29,7 +29,7 @@ MINODE *iget();
 #include "util.c"
 ***************************************************/
 
-#include "cd_ls_pwd.c"
+#include "cd_ls_pwd.h"
 
 int init()
 {
@@ -41,7 +41,7 @@ int init()
 
   for (i=0; i<NMINODE; i++){
       mip = &minode[i];
-	  mip->refcount = 0;
+	  mip->refCount = 0;
   }
   for (i=0; i<NPROC; i++){
        p = &proc[i];
@@ -72,7 +72,7 @@ int mount_root()
 
 	// check for EXT2 magic number:
 
-	printf("checking if EXT2... ", sp->s_magic);
+	printf("checking if EXT2... ");
 	if (sp->s_magic != 0xEF53)
 	{
 		printf("NOT an EXT2 FS\n");
@@ -80,8 +80,8 @@ int mount_root()
 	}
 	printf("EXT2 FS OK\n");
 
-	nblocks = sp->blocks_count;
-	ninodes = sp->inodes_count;
+	nblocks = sp->s_blocks_count;
+	ninodes = sp->s_inodes_count;
 
   //(2). get GD0 in Block #2:
        //record bmap, imap, inodes_start as globals
@@ -90,11 +90,52 @@ int mount_root()
 
 	bmap = gp->bg_block_bitmap;
 	imap = gp->bg_inode_bitmap;
-	inodes_start = gp->bg_inode_table;
+	inode_start = gp->bg_inode_table;
 
   //(3). 
 	root = iget(dev, 2);       // get #2 INODE into minoe[ ]
     printf("mounted root OK\n");
+}
+
+int print(MINODE *mip)
+{
+  int blk;
+  char buf[1024], temp[256];
+  int i;
+  DIR *dp;
+  char *cp;
+
+  INODE *ip = &mip->INODE;
+  for (i=0; i < 12; i++){
+    if (ip->i_block[i]==0)
+      return 0;
+    get_block(dev, ip->i_block[i], buf);
+
+    dp = (DIR *)buf; 
+    cp = buf;
+
+    while(cp < buf+1024){
+
+       // make dp->name a string in temp[ ]
+       printf("%d %d %d %s\n", dp->inode, dp->rec_len, dp->name_len, temp);
+
+       cp += dp->rec_len;
+       dp = (DIR *)cp;
+    }
+  }
+}
+ 
+int quit()
+{
+  int i;
+  MINODE *mip;
+  for (i=0; i<NMINODE; i++)
+  {
+    mip = &minode[i];
+    if (mip->refCount > 0)
+      iput(mip);
+  }
+  exit(0);
 }
 
 char *disk = "mydisk";
@@ -148,45 +189,4 @@ int main(int argc, char *argv[ ])
 	else if (strcmp(cmd, "quit")==0)
        quit();
   }
-}
-
-int print(MINODE *mip)
-{
-  int blk;
-  char buf[1024], temp[256];
-  int i;
-  DIR *dp;
-  char *cp;
-
-  INODE *ip = &mip->INODE;
-  for (i=0; i < 12; i++){
-    if (ip->i_block[i]==0)
-      return 0;
-    get_block(dev, ip->i_block[i], buf);
-
-    dp = (DIR *)buf; 
-    cp = buf;
-
-    while(cp < buf+1024){
-
-       // make dp->name a string in temp[ ]
-       printf("%d %d %d %s\n", dp->inode, dp->rec_len, dp->name_len, temp);
-
-       cp += dp->rec_len;
-       dp = (DIR *)cp;
-    }
-  }
-}
- 
-int quit()
-{
-  int i;
-  MINODE *mip;
-  for (i=0; i<NMINODE; i++)
-  {
-    mip = &minode[i];
-    if (mip->refCount > 0)
-      iput(mip);
-  }
-  exit(0);
 }
