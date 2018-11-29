@@ -49,8 +49,8 @@ int ls_file(int ino)
 
 	// print links, owners, and size
 	printf("%4d ", stat.i_links_count);
-	printf("%4d ", stat.i_gid);
 	printf("%4d ", stat.i_uid);
+	printf("%4d ", stat.i_gid);
 	printf("%8d ", stat.i_size);
 
 	// print time
@@ -63,25 +63,41 @@ int ls_file(int ino)
 
 int ls_dir(char *dirname)
 {
-	/*
+	char *buf;
     int ino = getino(dirname);
-    MINODE mip = iget(dev, ino); ===> mip points at dirname's minode
-                                                         INODE  
-                                                         other fields
-    Get INODE.i_block[0] into a buf[ ];
-    Step through each dir_entry (skip . and .. if you want)
-    For each dir_entry: you have its ino.
-	{
-		ls_file(ino);
-		// print name of file
+    MINODE mip = iget(dev, ino);
+	int i;
+	char temp[256];
 
+	for (i=0; i < 12; i++)
+	{ 
+		if (mip->INODE.i_block[i] == 0)
+			break;
+		get_block(dev, mip->INODE.i_block[i], dbuf);
+	    dp = (DIR *)dbuf;
+		cp = dbuf;
+
+	    while (cp < dbuf + BLKSIZE)
+		{
+		   strncpy(temp, dp->name, dp->name_len);
+	       temp[dp->name_len] = 0;
+
+		   ls_file(dp->inode);
+		   printf("%s\n", temp);
+	       cp += dp->rec_len;
+		   dp = (DIR *)cp;
+		   
+	    }
 	}
-	*/
+	return 0;
 }
 
 int ls(char *pathname)
 {
-	
+    int ino = getino(dirname);
+    MINODE mip = iget(dev, ino);
+	// Check if reg or dir, use correct ls
+
 }
 
 int chdir(char *pathname)
