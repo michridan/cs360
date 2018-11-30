@@ -67,8 +67,8 @@ int client_init(char *argv[])
 
 int main(int argc, char *argv[ ])
 {
-  int n;
-  char line[MAX], temp[MAX], cmd[64], fullpath[MAX];
+  int n, size;
+  char line[MAX], temp[MAX], cmd[64], fullpath[MAX], name[MAX];
 
   if (argc < 3){
      printf("Usage : client ServerName SeverPort\n");
@@ -87,17 +87,50 @@ int main(int argc, char *argv[ ])
     if (line[0]==0)                  // exit if NULL line
        exit(0);
 
-	strcpy(temp, line);
-	sscanf("%s %s", cmd, fullpath);
+	if(!strncmp(line, "get", 3))
+	{
+		// Send command to server and await feedback in the form of "#bytes filename"
+		write(server_sock, line, MAX);
+		read(server_sock, line, MAX);
 
-	//TODO: Process command
+		// Parse file information
+		sscanf(line, "%d %s", size, name);
 
-    // Send ENTIRE line to server
-    n = write(server_sock, line, MAX);
-    printf("client: wrote n=%d bytes; line=(%s)\n", n, line);
+		// Download file
+		download(server_sock, name, size)
+	}
+	else if(!strncmp(line, "put", 3))
+	{
+		strcpy(temp, line);
+		sscanf(temp, "%s %s", cmd, fullpath);
+		
+		// Send command to prep server
+		write(server_sock, cmd, 64);
 
-    // Read a line from sock and show it
-    n = read(server_sock, ans, MAX);
-    printf("client: read  n=%d bytes; echo=(%s)\n",n, ans);
+		// Upload file
+		upload(server_sock, fullpath);
+	}
+	else if(!strncmp(line, "ls", 2))
+	{
+		// Send command to server
+		write(server_sock, line, MAX);
+
+		strcpy(line, "Perfoming ls");
+
+		// Keep reading lines until a stop message is given
+		while(strcmp(line, "STOP"));
+		{
+			printf("%s\n", line);
+
+			read(server_sock, line, MAX);
+		}
+	}
+	else
+	{
+		// Send command to server and receive feedback
+		write(server_sock, line, MAX);
+		read(server_sock, line, MAX);
+		printf("%s\n", line);
+	}
   }
 }

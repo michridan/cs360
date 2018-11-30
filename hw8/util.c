@@ -1,4 +1,4 @@
-/************ prelab.c **********
+/************ util.c **********
   This is starting as a collection
   of prelab functions, and I will
   be adding the other utility functions
@@ -107,4 +107,12 @@ void execute_command(int cmd, char *path)
     case 6: ls(path);
 	    break;
   }
+}
+
+int upload(int sock, char *path)
+{
+}
+
+int download(int sock, char *name, int size)
+{
 }

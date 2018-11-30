@@ -1,4 +1,4 @@
-/************ prelab.h **********
+/************ util.h **********
   This is starting as a collection
   of prelab functions, and I will
   be adding the other utility functions
@@ -20,3 +20,5 @@ void ls_dir(char *dirname);
 void ls(char *name);
 int find_command(char *cmd);
 void execute_command(int cmd, char *path);
+int upload(int sock, char *path);
+int download(int sock, char *name, int size);
