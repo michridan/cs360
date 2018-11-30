@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
-#define  MAX 256
+#include "util.h"
 
 // Define variables:
 struct sockaddr_in  server_addr, client_addr, name_addr;
@@ -18,6 +18,151 @@ struct hostent *hp;
 int  mysock, client_sock;              // socket descriptors
 int  serverPort;                     // server port number
 int  r, length, n;                   // help variables
+char *root[MAX];
+
+void add_root(char *path)
+{
+	char temp[MAX];
+	if(path[0] == '/')
+	{
+		strcpy(temp, root);
+		strcat(temp, path);
+		strcpy(path, temp);
+	}
+}
+
+void ls_file(char *file)
+{
+  int i = 0, n;
+  char mods[3] = { 'x', 'w', 'r' }, temp[MAX], buf[MAX], name[MAX], pathname[MAX];
+  struct stat st;
+
+  lstat(file, &st);
+  strcpy(pathname, file);
+
+  // print mode
+  if (S_ISREG(st.st_mode))
+	  file[i++] = '-';
+  else if(S_ISDIR(st.st_mode))
+	  file[i++] = 'd';
+  else if(S_ISLNK(st.st_mode))
+	  file[i++] = 'l';
+
+  for(n = 8; n >= 0; n--)
+  {
+	  if(st.st_mode & (1 << n))
+		  file[i++] = mods[i % 3];
+	  else
+		  file[i++] = '-';
+  }
+
+  file[i] = 0;
+
+  // links, owners, size, and access time
+  strcpy(temp, ctime(&st.st_atime));
+  temp[strlen(temp) - 1] = 0;
+  sprintf(buf, " %4d %4d %4d %4d %s ", st.st_nlink, st.st_uid, st.st_gid, st.st_size, temp);
+
+  strcat(file, buf);
+  // print name
+  strcpy(temp, pathname);
+  strcat(file, basename(temp));
+
+  if(S_ISLNK(st.st_mode))
+  {
+	  i = readlink(pathname, temp, MAX);
+	  temp[i] = 0;
+	  sprintf(buf, " -> %s", temp);
+	  strcat(file, buf);
+  }
+}
+
+void ls_dir(char *dirname)
+{
+  struct dirent *ep;
+  DIR *dp = opendir(dirname);
+  char temp[MAX];
+
+  while(ep = readdir(dp))
+  {
+	strcpy(temp, ep->d_name);
+  	ls_file(temp);
+	write(client_sock, temp, MAX);
+  }
+}
+
+void ls(char *name)
+{
+  struct stat st;
+
+  if(!strcmp(name, ""))
+	  strcpy(name, ".");
+
+  stat(name, &st);
+
+  if(S_ISDIR(st.st_mode))
+	  ls_dir(name);
+  else
+  {
+	  ls_file(name);
+	  write(client_sock, name, MAX);
+  }
+
+  write(client_sock, "STOP", MAX);
+}
+
+int find_command(char *cmd)
+{
+  if(!strcmp(cmd, "mkdir"))
+	  return 1;
+  if(!strcmp(cmd, "rmdir"))
+	  return 2;
+  if(!strcmp(cmd, "rm"))
+	  return 3;
+  if(!strcmp(cmd, "ls"))
+	  return 4;
+  if(!strcmp(cmd, "get"))
+	  return 5;
+  if(!strcmp(cmd, "put"))
+	  return 6;
+}
+
+void execute_command(int cmd, char *path)
+{
+  switch(cmd)
+  {
+    case 1: if(!mkdir(path, 0777))
+		    write(client_sock, "mkdir successful", MAX);
+	    else
+		    write(client_sock, "mkdir failed", MAX);
+	    break;
+    case 2: if(!rmdir(path))
+		    write(client_sock, "rmdir successful", MAX);
+	    else
+		    write(client_sock, "rmdir failed", MAX);
+	    break;
+    case 3: if(!unlink(path))
+		    write(client_sock, "rm successful", MAX);
+	    else
+		    write(client_sock, "rm failed", MAX);
+	    break;
+    case 4: ls(path);
+	    break;
+	case 5: upload(client_sock, path);
+		break;
+	case 6: char * line[MAX], name[MAX];
+			int size;
+
+			read(client_sock, line, MAX);
+
+			sscanf(line, "%d %s", size, name);
+
+			if(size >= 0)
+				download(client_sock, name, size);
+		break;
+
+  }
+}
 
 // Server initialization code:
 
@@ -81,6 +226,7 @@ int main(int argc, char *argv[])
 {
    char *hostname;
    char line[MAX];
+   char cmd[64], pathname[MAX];
 
    if (argc < 2)
       hostname = "localhost";
@@ -118,13 +264,9 @@ int main(int argc, char *argv[])
       // show the line string
       printf("server: read  n=%d bytes; line=[%s]\n", n, line);
 
-      strcat(line, " ECHO");
+	  sscanf(line, "%s %s", cmd, pathname);
+	  add_root(pathname);
 
-      // send the echo line to client 
-      n = write(client_sock, line, MAX);
-
-      printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
-      printf("server: ready for next request\n");
     }
  }
 }

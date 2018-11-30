@@ -14,11 +14,12 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
-void ls_file(char *filename);
-void ls_dir(char *dirname);
-void ls(char *name);
-int find_command(char *cmd);
-void execute_command(int cmd, char *path);
+#define MAX 256
+
 int upload(int sock, char *path);
 int download(int sock, char *name, int size);

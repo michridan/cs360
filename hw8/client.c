@@ -8,8 +8,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include "util.h"
 
-#define MAX 256
 
 // Define variables
 struct hostent *hp;              
@@ -97,7 +97,8 @@ int main(int argc, char *argv[ ])
 		sscanf(line, "%d %s", size, name);
 
 		// Download file
-		download(server_sock, name, size)
+		if(size >= 0)
+			download(server_sock, name, size)
 	}
 	else if(!strncmp(line, "put", 3))
 	{
