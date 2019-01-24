@@ -69,6 +69,8 @@ int main(int argc, char *argv[ ])
 {
   int n, size;
   char line[MAX], temp[MAX], cmd[64], fullpath[MAX], name[MAX];
+  cmd[0] = 0;
+  fullpath[0] = 0;
 
   if (argc < 3){
      printf("Usage : client ServerName SeverPort\n");
@@ -94,11 +96,11 @@ int main(int argc, char *argv[ ])
 		read(server_sock, line, MAX);
 
 		// Parse file information
-		sscanf(line, "%d %s", size, name);
+		sscanf(line, "%d %s", &size, name);
 
 		// Download file
 		if(size >= 0)
-			download(server_sock, name, size)
+			download(server_sock, name, size);
 	}
 	else if(!strncmp(line, "put", 3))
 	{
@@ -119,7 +121,7 @@ int main(int argc, char *argv[ ])
 		strcpy(line, "Perfoming ls");
 
 		// Keep reading lines until a stop message is given
-		while(strcmp(line, "STOP"));
+		while(strcmp(line, "STOP"))
 		{
 			printf("%s\n", line);
 

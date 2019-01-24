@@ -18,7 +18,7 @@ struct hostent *hp;
 int  mysock, client_sock;              // socket descriptors
 int  serverPort;                     // server port number
 int  r, length, n;                   // help variables
-char *root[MAX];
+char root[MAX];
 
 void add_root(char *path)
 {
@@ -61,7 +61,7 @@ void ls_file(char *file)
   // links, owners, size, and access time
   strcpy(temp, ctime(&st.st_atime));
   temp[strlen(temp) - 1] = 0;
-  sprintf(buf, " %4d %4d %4d %4d %s ", st.st_nlink, st.st_uid, st.st_gid, st.st_size, temp);
+  sprintf(buf, " %4lu %4d %4d %4ld %s ", st.st_nlink, st.st_uid, st.st_gid, st.st_size, temp);
 
   strcat(file, buf);
   // print name
@@ -129,6 +129,9 @@ int find_command(char *cmd)
 
 void execute_command(int cmd, char *path)
 {
+	char line[MAX], name[MAX];
+	int size;
+
   switch(cmd)
   {
     case 1: if(!mkdir(path, 0777))
@@ -146,20 +149,20 @@ void execute_command(int cmd, char *path)
 	    else
 		    write(client_sock, "rm failed", MAX);
 	    break;
-    case 4: ls(path);
+    case 4: printf("running ls...\n");
+			ls(path);
 	    break;
 	case 5: upload(client_sock, path);
 		break;
-	case 6: char * line[MAX], name[MAX];
-			int size;
+	case 6: read(client_sock, line, MAX);
 
-			read(client_sock, line, MAX);
-
-			sscanf(line, "%d %s", size, name);
+			sscanf(line, "%d %s", &size, name);
 
 			if(size >= 0)
 				download(client_sock, name, size);
 		break;
+	default: write(client_sock, "command not implemented", MAX);
+			 break;
 
   }
 }
@@ -228,6 +231,7 @@ int main(int argc, char *argv[])
    char line[MAX];
    char cmd[64], pathname[MAX];
 
+
    if (argc < 2)
       hostname = "localhost";
    else
@@ -263,9 +267,14 @@ int main(int argc, char *argv[])
       
       // show the line string
       printf("server: read  n=%d bytes; line=[%s]\n", n, line);
+      
+	  cmd[0] = 0;
+      pathname[0] = 0;
 
 	  sscanf(line, "%s %s", cmd, pathname);
 	  add_root(pathname);
+
+	  execute_command(find_command(cmd), pathname);
 
     }
  }

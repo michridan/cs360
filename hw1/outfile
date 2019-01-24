@@ -1,0 +1,148 @@
+enter main
+&argc=fffd28c0 argv=fffd2964 env=fffd2978
+&a=fffd2898 &b=fffd2894 &c=fffd2890
+argc=4
+argv[0]=./a.out
+argv[1]=one
+argv[2]=two
+argv[3]=three
+enter A
+&d=fffd286c &e=fffd2868 &f=fffd2864
+enter B
+&g=fffd283c &h=fffd2838 &i=fffd2834
+enter C
+&u=fffd27f8 &v=fffd27f4 &w=fffd27f0 &i=fffd27ec &p=fffd27e8
+Printing stack frame linked list
+fffd2818 -> fffd2848 -> fffd2878 -> fffd28b8 ->fffd2938 ->       0
+Printing stack contents, starting at p
+fffd27e8	=	fffd27e8
+fffd27ec	=	       d
+fffd27f0	=	       c
+fffd27f4	=	       b
+fffd27f8	=	       a
+fffd27fc	=	       5
+fffd2800	=	       7
+fffd2804	=	  62e1a0
+fffd2808	=	  776960
+fffd280c	=	fffd2834
+fffd2810	=	       0
+fffd2814	=	       0
+fffd2818	=	fffd2848
+fffd281c	=	 80485ac
+fffd2820	=	       7
+fffd2824	=	       8
+fffd2828	=	fffd2838
+fffd282c	=	fffd2834
+fffd2830	=	       7
+fffd2834	=	       9
+fffd2838	=	       8
+fffd283c	=	       7
+fffd2840	=	fffd2854
+fffd2844	=	fffd2864
+fffd2848	=	fffd2878
+fffd284c	=	 804853e
+fffd2850	=	       4
+fffd2854	=	       5
+fffd2858	=	fffd2868
+fffd285c	=	fffd2864
+fffd2860	=	fffd28b8
+fffd2864	=	       6
+fffd2868	=	       5
+fffd286c	=	       4
+fffd2870	=	fffd2884
+fffd2874	=	fffd2890
+fffd2878	=	fffd28b8
+fffd287c	=	 80484ce
+fffd2880	=	       1
+fffd2884	=	       2
+fffd2888	=	fffd46ae
+fffd288c	=	fffd2890
+fffd2890	=	       3
+fffd2894	=	       2
+fffd2898	=	       1
+fffd289c	=	       4
+fffd28a0	=	 8048770
+fffd28a4	=	 8048340
+fffd28a8	=	 804877b
+fffd28ac	=	  775ff4
+fffd28b0	=	 8048770
+fffd28b4	=	       0
+fffd28b8	=	fffd2938
+fffd28bc	=	  5f9d28
+fffd28c0	=	       4
+fffd28c4	=	fffd2964
+fffd28c8	=	fffd2978
+fffd28cc	=	f77763d0
+fffd28d0	=	 8048340
+fffd28d4	=	ffffffff
+fffd28d8	=	  5dffc4
+fffd28dc	=	 8048241
+fffd28e0	=	       1
+fffd28e4	=	fffd2920
+fffd28e8	=	  5cee85
+fffd28ec	=	  5e0ab8
+fffd28f0	=	f77766b0
+fffd28f4	=	  775ff4
+fffd28f8	=	       0
+fffd28fc	=	       0
+fffd2900	=	fffd2938
+fffd2904	=	aa6104fb
+fffd2908	=	ef095304
+fffd290c	=	       0
+fffd2910	=	       0
+fffd2914	=	       0
+fffd2918	=	       4
+fffd291c	=	 8048340
+fffd2920	=	       0
+fffd2924	=	  5d5200
+fffd2928	=	  5f9c4b
+fffd292c	=	  5dffc4
+fffd2930	=	       4
+fffd2934	=	 8048340
+fffd2938	=	       0
+fffd293c	=	 8048361
+fffd2940	=	 80483f4
+fffd2944	=	       4
+fffd2948	=	fffd2964
+fffd294c	=	 8048770
+fffd2950	=	 8048760
+fffd2954	=	  5cf8f0
+fffd2958	=	fffd295c
+fffd295c	=	       0
+fffd2960	=	       4
+fffd2964	=	fffd469e
+fffd2968	=	fffd46a6
+fffd296c	=	fffd46aa
+fffd2970	=	fffd46ae
+fffd2974	=	       0
+fffd2978	=	fffd46b4
+fffd297c	=	fffd46d5
+fffd2980	=	fffd46f0
+fffd2984	=	fffd4704
+fffd2988	=	fffd4714
+fffd298c	=	fffd4722
+fffd2990	=	fffd4744
+fffd2994	=	fffd475c
+fffd2998	=	fffd477c
+fffd299c	=	fffd479c
+fffd29a0	=	fffd47b0
+fffd29a4	=	fffd47be
+fffd29a8	=	fffd4dcb
+fffd29ac	=	fffd4de9
+fffd29b0	=	fffd4e70
+fffd29b4	=	fffd4e97
+fffd29b8	=	fffd4ea8
+fffd29bc	=	fffd4edb
+fffd29c0	=	fffd4ef2
+fffd29c4	=	fffd4f1b
+fffd29c8	=	fffd4f23
+fffd29cc	=	fffd4f41
+fffd29d0	=	fffd4f52
+fffd29d4	=	fffd4f6e
+fffd29d8	=	fffd4f7a
+fffd29dc	=	fffd4fae
+fffd29e0	=	fffd4fd1
+fffd29e4	=	fffd4fe6
+exit B
+exit A
+exit main
